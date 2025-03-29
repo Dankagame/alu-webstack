@@ -7,26 +7,26 @@ global
     user haproxy
     group haproxy
     daemon
+    maxconn 256
 
 defaults
     log global
     mode http
-    option httplog
-    option dontlognull
-    timeout connect 5000
-    timeout client 50000
-    timeout server 50000
+    timeout connect 5000ms
+    timeout client 50000ms
+    timeout server 50000ms
+    option forwardfor
 
-frontend http_front
+frontend http_redirect
     bind *:80
-    default_backend http_back
+    redirect scheme https code 301 if !{ ssl_fc }
 
-frontend www-https
-    bind *:443 ssl crt /etc/haproxy/certs/www.manzi453.tech.pem
-    http-request add-header X-Forwarded-Proto https
-    default_backend http_back
+frontend https_frontend
+    bind *:443 ssl crt /etc/haproxy/certs/www.dankagame.tech.pem
+    reqadd X-Forwarded-Proto:\ https
+    default_backend web_servers
 
-backend http_back
-    balance roundrobin
-    server 6441-web-01 44.201.238.52:80 check
-    server 6441-web-02 54.157.252.190:80 check
+backend web_servers
+    server web1 127.0.0.1:80 check
+    http-response set-header X-Served-By %s
+    http-response set-header Content "Holberton School"
